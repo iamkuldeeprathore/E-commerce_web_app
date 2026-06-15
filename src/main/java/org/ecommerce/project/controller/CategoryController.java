@@ -1,24 +1,22 @@
 package org.ecommerce.project.controller;
 
+import jakarta.validation.Valid;
 import org.ecommerce.project.model.Category;
-import org.ecommerce.project.service.Categoryservice;
-import org.ecommerce.project.service.Categoryserviceimp;
+import org.ecommerce.project.service.CategoryService;
+import org.ecommerce.project.service.CategoryServiceImp;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.xml.catalog.CatalogResolver;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 public class CategoryController {
-    private  Categoryservice categoryservice;
+    private CategoryService categoryservice;
 
-    public CategoryController(Categoryserviceimp categoryserviceimp){
+    public CategoryController(CategoryServiceImp categoryserviceimp){
         this.categoryservice=categoryserviceimp;
 
     }
@@ -31,7 +29,7 @@ public class CategoryController {
     }
 
     @PostMapping("public/categories")
-    public ResponseEntity<String> addCategory(@RequestBody Category category){
+    public ResponseEntity<String> addCategory( @Valid @RequestBody Category category){
         try {
 
             String status = categoryservice.addCategory(category);

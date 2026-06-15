@@ -4,7 +4,7 @@ import org.ecommerce.project.model.Category;
 
 import java.util.List;
 
-public interface Categoryservice {
+public interface CategoryService {
     List<Category> getAllCategories();
     String addCategory(Category category);
 
