@@ -5,7 +5,7 @@ public class APIException extends RuntimeException {
     String fieldName;
 
     public APIException( String fieldName) {
-        super(String.format("%s already exist",fieldName));
+        super(fieldName);
         this.fieldName = fieldName;
 
     }
