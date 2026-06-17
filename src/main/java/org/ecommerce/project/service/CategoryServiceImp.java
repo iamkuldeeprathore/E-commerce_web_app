@@ -8,6 +8,10 @@ import org.ecommerce.project.payload.CategoryResponse;
 import org.ecommerce.project.repository.ControllerRepo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.swing.text.html.Option;
@@ -24,9 +28,15 @@ public class CategoryServiceImp implements CategoryService {
     private ModelMapper modelMapper;
 
     @Override
-    public CategoryResponse getAllCategories() {
+    public CategoryResponse getAllCategories(Integer  pageNumber , Integer pageSize ,String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending()
+                :Sort.by(sortBy).descending();
 
-        List<Category> list= controllerRepo.findAll();
+        Pageable pageable= PageRequest.of(pageNumber,pageSize,sortByAndOrder);
+        Page <Category> categoryPage= controllerRepo.findAll(pageable);
+
+        List<Category> list= categoryPage.getContent();
         if(list.isEmpty()){
             throw  new APIException("No Category is Present");
         }
@@ -36,6 +46,11 @@ public class CategoryServiceImp implements CategoryService {
 
         CategoryResponse categoryResponse= new CategoryResponse();
         categoryResponse.setContent(categoryDTOS);
+        categoryResponse.setPageNumber(categoryPage.getNumber());
+        categoryResponse.setPageSize(categoryPage.getSize());
+        categoryResponse.setTotalElements(categoryPage.getTotalElements());
+        categoryResponse.setTotalPages(categoryPage.getTotalPages());
+        categoryResponse.setLast(categoryPage.isLast());
         return categoryResponse;
 
     }
@@ -57,7 +72,7 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public String deleteCategory(Long id) {
-        Category cat= controllerRepo.findById(id).orElseThrow(()->
+        Category cat = controllerRepo.findById(id).orElseThrow(()->
                 new ResourceNotFoundException("Category","CategoryId",id));
 
         controllerRepo.delete(cat);

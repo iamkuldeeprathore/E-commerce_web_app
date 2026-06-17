@@ -11,7 +11,7 @@ import java.util.Optional;
 
 
 public interface CategoryService {
-    CategoryResponse getAllCategories();
+    CategoryResponse getAllCategories(Integer pageNumber,Integer pageSize, String sortBy, String SortDir);
     CategoryDTO addCategory(CategoryDTO categoryDTO);
 
     String deleteCategory(Long id);
