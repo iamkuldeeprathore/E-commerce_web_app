@@ -2,7 +2,9 @@ package org.ecommerce.project.controller;
 
 import org.ecommerce.project.model.Product;
 import org.ecommerce.project.payload.ProductDTO;
+import org.ecommerce.project.payload.ProductResponse;
 import org.ecommerce.project.service.ProductService;
+import org.ecommerce.project.service.ProductServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,5 +21,29 @@ public class ProductController {
                                                  @PathVariable  Long categoryId){
        ProductDTO productDTO= productService.addProduct(categoryId,product);
        return new ResponseEntity<>(productDTO, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/public/products")
+    public ResponseEntity<ProductResponse> getAllProducts(){
+        ProductResponse productResponse=productService.getAllProducts();
+        return new ResponseEntity<>(productResponse,HttpStatus.OK);
+    }
+
+    @GetMapping("/public/{categoryId}/products")
+    public ResponseEntity<ProductResponse> getAllProductsByCategory(@PathVariable Long categoryId){
+        ProductResponse productResponse= productService.searchProductByCategory(categoryId);
+        return new ResponseEntity<>(productResponse,HttpStatus.OK);
+    }
+
+    @GetMapping("/public/products/keyword/{keyword}")
+    public ResponseEntity<ProductResponse> searchByKeyword(@PathVariable String keyword){
+        ProductResponse productResponse= productService.searchByKeyword(keyword);
+        return new ResponseEntity<>(productResponse,HttpStatus.OK);
+    }
+
+    @PutMapping("/admin/categories/{productId}/product")
+    public ResponseEntity<ProductDTO> updateProduct(@PathVariable Long productId){
+        ProductDTO productDTO= productService.updateProduct(productId);
+        return new ResponseEntity<>(productDTO,HttpStatus.OK);
     }
 }
