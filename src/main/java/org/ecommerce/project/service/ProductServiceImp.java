@@ -1,5 +1,6 @@
 package org.ecommerce.project.service;
 
+import jakarta.validation.Valid;
 import org.ecommerce.project.exception.ResourceNotFoundException;
 import org.ecommerce.project.model.Category;
 import org.ecommerce.project.model.Product;
@@ -9,9 +10,16 @@ import org.ecommerce.project.repository.CategoryRepository;
 import org.ecommerce.project.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,11 +34,17 @@ public class ProductServiceImp implements ProductService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private FileService fileService;
+
+    @Value("${project.images")
+    private String path;
+
     @Override
-    public ProductDTO addProduct(Long categoryId, Product product) {
+    public ProductDTO addProduct(Long categoryId, ProductDTO productDto) {
         Category category= categoryRepository.findById(categoryId)
                 .orElseThrow(()->new ResourceNotFoundException("Category", "categoryId","Category"));
-
+        Product product= modelMapper.map(productDto, Product.class);
         product.setCategory(category);
         double specialPrice= product.getSpecialPrice()-(product.getDiscount()*0.01 * product.getPrice());
         product.setSpecialPrice(specialPrice);
@@ -76,13 +90,48 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public ProductDTO updateProduct(Long productId) {
+    public ProductDTO updateProduct(ProductDTO productDto , Long productId) {
 
+        Product updatedProduct= productRepository.findById(productId)
+                .orElseThrow(()-> new ResourceNotFoundException("ProductId","ProductId",productId));
+        Product product= modelMapper.map(productDto,Product.class);
+        updatedProduct.setProductName(product.getProductName());
+        updatedProduct.setDescription(product.getDescription());
+        updatedProduct.setPrice(product.getPrice());
+        updatedProduct.setDiscount(product.getDiscount());
+        updatedProduct.setSpecialPrice(product.getSpecialPrice());
+
+
+        productRepository.save(updatedProduct);
+
+        return modelMapper.map(updatedProduct,ProductDTO.class);
+    }
+
+    @Override
+    public ProductDTO deleteProduct(Long productId) {
         Product product= productRepository.findById(productId)
-                .orElseThrow(()-> new ResourceNotFoundException("ProductId","ProductId","ProductId"));
-        product.setProductName("Robot");
+                .orElseThrow(()-> new ResourceNotFoundException("ProductId" ,"productID",productId));
+        productRepository.delete(product);
+        return modelMapper.map(product, ProductDTO.class);
+    }
+
+    @Override
+    public ProductDTO updateImage(Long productId, MultipartFile image) throws IOException {
+        //get the image from the db
+        Product product= productRepository.findById(productId)
+                .orElseThrow(()->new ResourceNotFoundException("ProductId","productId",productId));
+        //upload image to the server
+        //get the file name of uploaded image
+//        String path="images/";
+        String fileName=fileService.uplaodImage( path , image);
+
+        //updating the new file name of the product
+        product.setImage(fileName);
         productRepository.save(product);
 
-        return modelMapper.map(product,ProductDTO.class);
+        // return the DTO
+        return modelMapper.map(product, ProductDTO.class);
     }
+
+
 }
