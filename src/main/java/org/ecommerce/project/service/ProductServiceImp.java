@@ -1,6 +1,5 @@
 package org.ecommerce.project.service;
 
-import jakarta.validation.Valid;
 import org.ecommerce.project.exception.ResourceNotFoundException;
 import org.ecommerce.project.model.Category;
 import org.ecommerce.project.model.Product;
@@ -11,16 +10,15 @@ import org.ecommerce.project.repository.ProductRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImp implements ProductService {
@@ -56,14 +54,27 @@ public class ProductServiceImp implements ProductService {
     }
 
     @Override
-    public ProductResponse getAllProducts() {
-        List<Product> productList=productRepository.findAll();
+    public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
+        Sort sortByAndOrder=sortDir.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageDetails= PageRequest.of(pageNumber,pageSize,sortByAndOrder);
+
+        Page<Product> productPage= productRepository.findAll(pageDetails);
+
+        List<Product> productList=productPage.getContent();
         List<ProductDTO> productDTOList= productList.stream()
                 .map(item->modelMapper.map(item, ProductDTO.class))
                 .toList();
 
-//        ProductResponse productResponse=new ProductResponse(productDTOList);
-        return new ProductResponse(productDTOList);
+        ProductResponse productResponse=new ProductResponse();
+        productResponse.setContent(productDTOList);
+        productResponse.setPageNumber(productPage.getNumber());
+        productResponse.setPagesize(productPage.getSize());
+        productResponse.setTotalPages(productPage.getTotalPages());
+        productResponse.setTotalElements(productPage.getTotalElements());
+        productResponse.setLastPage(productPage.isLast());
+        return productResponse;
     }
 
     @Override
@@ -75,8 +86,9 @@ public class ProductServiceImp implements ProductService {
                 .map(item->modelMapper.map(item, ProductDTO.class))
                 .toList();
 
-//        ProductResponse productResponse=new ProductResponse(productDTOList);
-        return new ProductResponse(productDTOList);
+        ProductResponse productResponse=new ProductResponse();
+        productResponse.setContent(productDTOList);
+        return productResponse;
     }
 
     @Override
@@ -86,7 +98,9 @@ public class ProductServiceImp implements ProductService {
                 .map(item->modelMapper.map(item,ProductDTO.class))
                 .toList();
 
-        return new ProductResponse(productDTOList);
+        ProductResponse productResponse=new ProductResponse();
+        productResponse.setContent(productDTOList);
+        return productResponse;
     }
 
     @Override
